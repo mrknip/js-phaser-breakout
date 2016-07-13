@@ -9,7 +9,7 @@ var gameProperties = {
   paddleAngleMultiplier: -15,
 
   ballRestartDelay: 2,
-  ballSpeed: 400,
+  ballSpeed: 300,
   ballAngles: [45, 60, 120, 135],
 
   blockBase: 180,
