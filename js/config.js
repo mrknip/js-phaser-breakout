@@ -2,8 +2,10 @@ var gameProperties = {
   gameHeight: 500,
   gameWidth: 400,
 
+  lives: 5,
+
   paddleHeight: 50,
-  paddleSpeed: 400,
+  paddleSpeed: 450,
   paddleSegments: 6,
   paddleSegWidth: 10, // Make this un-magic
   paddleAngleMultiplier: -15,
@@ -57,3 +59,19 @@ var imageAssets = {
     'red': 'blockRed'
   }
 }
+
+var audioAssets = {
+  paddleHitURL: 'assets/paddle_hit.ogg',
+  paddleHitName: 'paddleHit',
+
+  blockHitURL: 'assets/block_hit.ogg',
+  blockHitName: 'blockHit',
+
+  smashOneURL: 'assets/smash1.ogg',
+  smashOneName: 'smashOne',  
+  smashTwoURL: 'assets/smash2.ogg',
+  smashTwoName: 'smashTwo',  
+  smashThreeURL: 'assets/smash3.ogg',
+  smashThreeName: 'smashThree',
+}
+

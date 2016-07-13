@@ -4,6 +4,8 @@ var mainState = function(game) {
   this.paddleLeftKey;
   this.paddleRightKey;
 
+  this.paddleHitSound;
+
   this.blockGroup;
 
   this.score;
@@ -12,18 +14,26 @@ var mainState = function(game) {
 
   this.scoreDisplay;
   this.livesDisplay;
+  this.messageDisplay;
 }
 
-
-
 mainState.prototype = {
+
   // ========================
   // Game loop
   // =======================
   preload: function () {
+    
+    game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
+
     game.load.image(imageAssets.paddleName, imageAssets.paddleURL);
     game.load.image(imageAssets.ballName, imageAssets.ballURL);
     
+    game.load.audio(audioAssets.paddleHitName, audioAssets.paddleHitURL);
+    game.load.audio(audioAssets.smashOneName, audioAssets.smashOneURL);
+    game.load.audio(audioAssets.smashTwoName, audioAssets.smashTwoURL);
+    game.load.audio(audioAssets.smashThreeName, audioAssets.smashThreeURL);
+
     gameProperties.blockRows.forEach(function(colour){
       game.load.image(imageAssets.blockName[colour], imageAssets.blockURL[colour])
     });
@@ -33,6 +43,8 @@ mainState.prototype = {
     this.initGraphics();
     this.initControls();
     this.initPhysics();
+    this.initAudio();
+    this.initText();
 
     this.startDemo();
   },
@@ -60,12 +72,26 @@ mainState.prototype = {
     this.ball.anchor.set(0.5, 0.5);
 
     this.blockGroup = game.add.group();
+  },
 
+  initText: function () {
     this.scoreDisplay = game.add.text(gameProperties.scoreDisplayX, gameProperties.scoreDisplayY, "0", gameProperties.numberDisplayStyle);
     this.scoreDisplay.anchor.set(0, 0.5);
 
-    this.livesDisplay = game.add.text(gameProperties.livesDisplayX, gameProperties.livesDisplayY, "5", gameProperties.numberDisplayStyle);
+    this.livesDisplay = game.add.text(gameProperties.livesDisplayX, gameProperties.livesDisplayY, gameProperties.lives, gameProperties.numberDisplayStyle);
     this.livesDisplay.anchor.set(1, 0.5);
+
+    this.messageDisplay = game.add.text(game.world.centerX, game.world.centerY, "Click to start", gameProperties.numberDisplayStyle);
+    this.messageDisplay.anchor.set(0.5, 0);
+  },
+
+  initAudio: function () {
+    this.paddleHitSound = game.add.audio(audioAssets.paddleHitName);
+    this.smashOne = game.add.audio(audioAssets.smashOneName);
+    this.smashTwo = game.add.audio(audioAssets.smashTwoName);
+    this.smashThree = game.add.audio(audioAssets.smashThreeName);
+
+    this.smashes = [this.smashOne, this.smashTwo, this.smashThree];
   },
 
   initPhysics: function () {
@@ -115,6 +141,7 @@ mainState.prototype = {
   // ===========================
 
   startDemo: function () {
+    this.messageDisplay.visible = true;
     this.enablePit(false);
     this.enablePaddle(false);
     this.game.input.onDown.add(this.startGame, this);
@@ -122,7 +149,7 @@ mainState.prototype = {
 
   startGame: function () {
     this.game.input.onDown.remove(this.startGame, this);
-
+    this.messageDisplay.visible = false;
     this.enablePaddle(true);
     this.enablePit(true);
 
@@ -145,6 +172,9 @@ mainState.prototype = {
   // ==========================
 
   addBlocks: function () {
+    if (this.brickCount) {
+      this.blockGroup.callAll('kill');
+    }
     this.brickCount = 0;
     var rowHeight = gameProperties.blockBase,
         numBlocks = Math.floor(gameProperties.gameWidth / gameProperties.blockWidth);
@@ -172,10 +202,11 @@ mainState.prototype = {
     this.blockGroup.setAll('body.immovable', true);
   },
 
-
   resetScore: function () {
     this.score = 0;
-    this.lives = 5;
+    this.lives = gameProperties.lives;
+    this.updateScore();
+    this.updateLives();
   },
 
   reset: function () {
@@ -190,7 +221,7 @@ mainState.prototype = {
   },
 
   startBall: function () {  
-    this.ball.reset(game.rnd.between(50, 350), 300);
+    this.ball.reset(game.rnd.between(50, 350), 250);
     this.ball.visible = true;
     this.ball.body.enable = true;
 
@@ -218,6 +249,7 @@ mainState.prototype = {
     var contactSegment = Math.floor((ball.x - paddle.x)/gameProperties.paddleSegWidth)
     
     this.updateBounces();
+    this.paddleHitSound.play();
     
     if (contactSegment > (gameProperties.paddleSegments/2)) {
       contactSegment = (gameProperties.paddleSegments/2)
@@ -245,6 +277,7 @@ mainState.prototype = {
 
     if (this.lives == 0) {
       this.ball.kill();
+      this.messageDisplay.setText("Game over\nClick to start")
       this.startDemo();
     } else { 
       this.reset();
@@ -252,6 +285,9 @@ mainState.prototype = {
   },
 
   ballblockCollide: function (ball, block) {
+    var smash = game.rnd.pick(this.smashes)
+    smash.play();
+
     block.kill();
     this.brickCount--
     this.updateScore(block.colour);
@@ -280,8 +316,10 @@ mainState.prototype = {
     }
   },
 
-  updateScore: function (colour) {
-    this.score += gameProperties.scores[colour];
+  updateScore: function (colour = null) {
+    if (colour) {
+      this.score += gameProperties.scores[colour];
+    }
     this.scoreDisplay.setText(this.score);
   },
 
@@ -309,6 +347,20 @@ mainState.prototype = {
 };
 
 // Runner
+// Includes Webfont loader to give it the jump on the game loader
+
+WebFont.load({
+    active: function () { 
+      console.log('font loaded');
+      game.initText(); 
+    },
+
+    google: {
+      families: ['Orbitron']
+    }
+});
+
+
 var game = new Phaser.Game(gameProperties.gameWidth, gameProperties.gameHeight, Phaser.AUTO, 'gameDiv')
 game.state.add('main', mainState);
 game.state.start('main');
