@@ -349,18 +349,19 @@ mainState.prototype = {
 // Runner
 // Includes Webfont loader to give it the jump on the game loader
 
-WebFont.load({
-    active: function () { 
-      console.log('font loaded');
-      game.initText(); 
-    },
+var game = new Phaser.Game(gameProperties.gameWidth, gameProperties.gameHeight, Phaser.AUTO, 'gameDiv')
+game.state.add('main', mainState);
 
-    google: {
-      families: ['Orbitron']
-    }
+WebFont.load({
+  active: function () { 
+    console.log('font loaded');
+    game.state.start('main'); 
+  },
+
+  google: {
+    families: ['Orbitron']
+  }
 });
 
 
-var game = new Phaser.Game(gameProperties.gameWidth, gameProperties.gameHeight, Phaser.AUTO, 'gameDiv')
-game.state.add('main', mainState);
-game.state.start('main');
+// game.state.start('main');
