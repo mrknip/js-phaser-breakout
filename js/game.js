@@ -55,7 +55,7 @@ mainState.prototype = {
     game.physics.arcade.collide(this.ball, this.paddleSprite, this.ballPaddleCollide, null, this);
     game.physics.arcade.collide(this.ball, this.blockGroup, this.ballblockCollide, this.checkOrange, this);
 
-    if (this.ball.y < 50 && this.ball.topped == false) {
+    if (this.ball.top == 0 && this.ball.topped == false) {
       this.updateModifiers('top');
     }
   },
@@ -355,7 +355,9 @@ game.state.add('main', mainState);
 WebFont.load({
   active: function () { 
     console.log('font loaded');
-    game.state.start('main'); 
+    setTimeout(function() {
+      game.state.start('main')
+    }, 2000); 
   },
 
   google: {
