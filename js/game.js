@@ -42,6 +42,8 @@ mainState.prototype = {
   },
 
   create: function () {
+
+
     this.initGraphics();
     this.initControls();
     this.initPhysics();
@@ -307,12 +309,19 @@ mainState.prototype = {
     this.updateLives();
 
     if (this.lives == 0) {
-      this.ball.kill();
-      this.messageDisplay.setText("Game over\nClick to start")
-      this.startDemo();
+      this.showGameOver();
     } else { 
       this.reset();
     }
+  },
+
+  showGameOver: function () {
+    this.ball.kill();
+    this.messageDisplay.setText("Game over");
+    this.messageDisplay.visible = true;
+    setTimeout(function(){
+      game.state.start('menu');
+    }, 3000);
   },
 
   ballblockCollide: function (ball, block) {
@@ -385,12 +394,11 @@ var game = new Phaser.Game(gameProperties.gameWidth, gameProperties.gameHeight, 
 WebFont.load({
   active: function () { 
     game.state.add('main', mainState)
-    game.state.start('main') 
+    game.state.add('menu', Menu)
+    game.state.start('menu') 
   },
   google: {
     families: ['Orbitron:700']
   }
 });
 
-
-// game.state.start('main');

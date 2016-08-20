@@ -2,7 +2,7 @@ var gameProperties = {
   gameHeight: 500,
   gameWidth: 400,
 
-  lives: 5,
+  lives: 1,
 
   paddleHeight: 50,
   paddleSpeed: 450,
@@ -57,7 +57,10 @@ var imageAssets = {
     'green': 'blockGreen',
     'orange': 'blockOrange',
     'red': 'blockRed'
-  }
+  },
+
+  menuBGUrl: 'assets/menubackground.png',
+  menuBGName: 'MenuBackground'
 }
 
 var audioAssets = {
