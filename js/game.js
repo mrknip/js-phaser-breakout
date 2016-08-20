@@ -303,7 +303,6 @@ mainState.prototype = {
   },
 
   ballOutOfBounds: function () {
-    console.log('out!')
     this.lives--
     this.updateLives();
 
@@ -382,18 +381,14 @@ mainState.prototype = {
 // Includes Webfont loader to give it the jump on the game loader
 
 var game = new Phaser.Game(gameProperties.gameWidth, gameProperties.gameHeight, Phaser.AUTO, 'gameDiv')
-game.state.add('main', mainState);
-
+    
 WebFont.load({
   active: function () { 
-    console.log('font loaded');
-    setTimeout(function() {
-      game.state.start('main')
-    }, 2000); 
+    game.state.add('main', mainState)
+    game.state.start('main') 
   },
-
   google: {
-    families: ['Orbitron']
+    families: ['Orbitron:700']
   }
 });
 
