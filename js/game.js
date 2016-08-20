@@ -183,33 +183,26 @@ mainState.prototype = {
   // Setup functions
   // ==========================
 
+  loadLevelFromSchema: function (schema, key) {
+    for (var i = 0; i < schema.length; i++) {
+      for (var j = 0; j < schema[0].length; j++) {
+        if (schema[i][j] === " ") {continue;}
+        this.addBlock({
+          x: gameProperties.gridPosX + (j * gameProperties.blockWidth),
+          y: gameProperties.gridPosY + (i * gameProperties.blockHeight),
+          colour: key[schema[i][j]]
+        })
+      }
+    }
+  },
+
   addBlocks: function () {
     if (this.blockCount) {
       this.blockGroup.callAll('kill');
     }
     this.blockCount = 0;
 
-
-    var rowHeight = gameProperties.blockBase,
-        numBlocks = Math.floor(gameProperties.gameWidth / gameProperties.blockWidth);
-
-    for (var i = gameProperties.blockRows.length - 1; i >= 0; i--) {
-      for (var j = 0; j < numBlocks; j++) {
-        this.addBlock({
-          x: j * gameProperties.blockWidth,
-          y: rowHeight,
-          colour: gameProperties.blockRows[i]
-        })
-
-        this.addBlock({
-          x: j * gameProperties.blockWidth,
-          y: rowHeight - 15,
-          colour: gameProperties.blockRows[i] 
-        })
-
-      }
-      rowHeight -=30;
-    }
+    this.loadLevelFromSchema(levels.default, levels.key);
   },
 
   addBlock: function (options) {
@@ -220,7 +213,6 @@ mainState.prototype = {
     this.blockGroup.add(b)
     b.body.immovable = true;
     return b;
-
   },
 
   resetScore: function () {
@@ -244,6 +236,9 @@ mainState.prototype = {
 
   },
 
+  // =======================
+  // Countdown between turns
+  // =======================
   startBallCountdown: function () {
     this.ballCountdown.start();
     this.messageDisplay.visible = true;
@@ -332,9 +327,10 @@ mainState.prototype = {
 
   ballblockCollide: function (ball, block) {
     game.rnd.pick(this.smashes).play();
-    block.specialfunc('got hit')
+
     block.kill();
     this.blockCount--
+
     this.updateScore(block.colour);
     if (block.colour == 'orange') {
       this.ball.body.bounce.set(1);

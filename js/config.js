@@ -16,6 +16,9 @@ var gameProperties = {
 
   blockBase: 180,
   blockWidth: 50,
+  blockHeight: 15,
+  gridPosX: 0,
+  gridPosY: 75,
   blockRows: ['red', 'orange', 'green', 'yellow'],
 
   scores: {
