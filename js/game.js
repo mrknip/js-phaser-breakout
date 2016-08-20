@@ -10,17 +10,19 @@ var mainState = function(game) {
 
   this.score;
   this.lives;
-  this.brickCount;
+  this.blockCount;
 
   this.scoreDisplay;
   this.livesDisplay;
   this.messageDisplay;
+
+  this.ballCountdown;
 }
 
 mainState.prototype = {
 
   // ========================
-  // Game loop
+  // Game setup and loop
   // =======================
   preload: function () {
     
@@ -52,6 +54,15 @@ mainState.prototype = {
   update: function () {
     this.movePaddle();
 
+    this.checkCollisions();
+
+
+    if (this.ballCountdown.running) {
+      this.messageDisplay.setText(Math.ceil(3 - this.ballCountdown.seconds));
+    }
+  },
+
+  checkCollisions: function () {
     game.physics.arcade.collide(this.ball, this.paddleSprite, this.ballPaddleCollide, null, this);
     game.physics.arcade.collide(this.ball, this.blockGroup, this.ballblockCollide, this.checkOrange, this);
 
@@ -83,6 +94,8 @@ mainState.prototype = {
 
     this.messageDisplay = game.add.text(game.world.centerX, game.world.centerY, "Click to start", gameProperties.numberDisplayStyle);
     this.messageDisplay.anchor.set(0.5, 0);
+
+    this.ballCountdown = game.time.create(false);
   },
 
   initAudio: function () {
@@ -172,10 +185,10 @@ mainState.prototype = {
   // ==========================
 
   addBlocks: function () {
-    if (this.brickCount) {
+    if (this.blockCount) {
       this.blockGroup.callAll('kill');
     }
-    this.brickCount = 0;
+    this.blockCount = 0;
     var rowHeight = gameProperties.blockBase,
         numBlocks = Math.floor(gameProperties.gameWidth / gameProperties.blockWidth);
 
@@ -185,7 +198,7 @@ mainState.prototype = {
         this.blockGroup.add(b);
         b.body.immovable = true;
         b.colour = gameProperties.blockRows[i];
-        this.brickCount++
+        this.blockCount++
       }
       rowHeight -=15;
 
@@ -194,9 +207,9 @@ mainState.prototype = {
           this.blockGroup.add(b);
           b.body.immovable = true;
           b.colour = gameProperties.blockRows[i];
-          this.brickCount++
+          this.blockCount++
         }
-        rowHeight -=15;
+      rowHeight -=15;
     }
 
     this.blockGroup.setAll('body.immovable', true);
@@ -217,7 +230,21 @@ mainState.prototype = {
 
     this.paddleSprite.scale.x = 1;
 
-    game.time.events.add(Phaser.Timer.SECOND * 1.5, this.startBall, this)
+    
+    this.startBallCountdown();
+    game.time.events.add(Phaser.Timer.SECOND * 3, this.startBall, this)
+
+  },
+
+  startBallCountdown: function () {
+    this.ballCountdown.start();
+    this.messageDisplay.visible = true;
+    this.ballCountdown.add(Phaser.Timer.SECOND * 3, this.endBallCountdown, this);
+  },
+
+  endBallCountdown: function () {
+    this.messageDisplay.visible = false;
+    this.ballCountdown.stop();
   },
 
   startBall: function () {  
@@ -243,14 +270,19 @@ mainState.prototype = {
   // Collision logic
   // ==========================
   
-
   ballPaddleCollide: function (ball, paddle) {
-    var returnAngle;
-    var contactSegment = Math.floor((ball.x - paddle.x)/gameProperties.paddleSegWidth)
-    
     this.updateBounces();
     this.paddleHitSound.play();
     
+    var contactSegment = Math.floor((ball.x - paddle.x)/gameProperties.paddleSegWidth)
+    game.physics.arcade.velocityFromAngle(this.calcReturnAngle(contactSegment), 
+                                          this.ball.speed,
+                                          this.ball.body.velocity);
+  },
+
+  calcReturnAngle: function (contactSegment) {
+    var returnAngle;
+
     if (contactSegment > (gameProperties.paddleSegments/2)) {
       contactSegment = (gameProperties.paddleSegments/2)
     } else if (contactSegment < -(gameProperties.paddleSegments/2)) {
@@ -259,15 +291,15 @@ mainState.prototype = {
       contactSegment = 1;
     }
 
-    returnAngle = (Math.abs(contactSegment) * gameProperties.paddleAngleMultiplier)
-
+    returnAngle = (Math.abs(contactSegment) * gameProperties.paddleAngleMultiplier);
+    
     if (contactSegment < 0) {
       returnAngle -= 110;
     } else if (contactSegment > 0) {
       returnAngle = -(70 - Math.abs(returnAngle));
     }
 
-    game.physics.arcade.velocityFromAngle(returnAngle, this.ball.speed, this.ball.body.velocity);
+    return returnAngle;
   },
 
   ballOutOfBounds: function () {
@@ -289,13 +321,13 @@ mainState.prototype = {
     smash.play();
 
     block.kill();
-    this.brickCount--
+    this.blockCount--
     this.updateScore(block.colour);
     if (block.colour == 'orange') {
       this.ball.body.bounce.set(1);
     }
 
-    if (this.brickCount == 0) {
+    if (this.blockCount == 0) {
       game.time.events.add(Phaser.Timer.SECOND * 0.5, this.startNextRound, this)    }
   },
 
