@@ -2,7 +2,7 @@ var gameProperties = {
   gameHeight: 500,
   gameWidth: 400,
 
-  lives: 1,
+  lives: 3,
 
   paddleHeight: 50,
   paddleSpeed: 450,

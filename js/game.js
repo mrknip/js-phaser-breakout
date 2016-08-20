@@ -188,30 +188,39 @@ mainState.prototype = {
       this.blockGroup.callAll('kill');
     }
     this.blockCount = 0;
+
+
     var rowHeight = gameProperties.blockBase,
         numBlocks = Math.floor(gameProperties.gameWidth / gameProperties.blockWidth);
 
     for (var i = gameProperties.blockRows.length - 1; i >= 0; i--) {
       for (var j = 0; j < numBlocks; j++) {
-        var b = game.add.sprite((j * gameProperties.blockWidth), rowHeight, imageAssets.blockName[gameProperties.blockRows[i]])
-        this.blockGroup.add(b);
-        b.body.immovable = true;
-        b.colour = gameProperties.blockRows[i];
-        this.blockCount++
+        this.addBlock({
+          x: j * gameProperties.blockWidth,
+          y: rowHeight,
+          colour: gameProperties.blockRows[i]
+        })
+
+        this.addBlock({
+          x: j * gameProperties.blockWidth,
+          y: rowHeight - 15,
+          colour: gameProperties.blockRows[i] 
+        })
+
       }
-      rowHeight -=15;
-
-        for (var j = 0; j < numBlocks; j++) {
-          var b = game.add.sprite((j * gameProperties.blockWidth), rowHeight, imageAssets.blockName[gameProperties.blockRows[i]])
-          this.blockGroup.add(b);
-          b.body.immovable = true;
-          b.colour = gameProperties.blockRows[i];
-          this.blockCount++
-        }
-      rowHeight -=15;
+      rowHeight -=30;
     }
+  },
 
-    this.blockGroup.setAll('body.immovable', true);
+  addBlock: function (options) {
+    var b = game.add.sprite(options.x, options.y, imageAssets.blockName[options.colour]);
+    b.colour = options.colour;
+
+    this.blockCount++;
+    this.blockGroup.add(b)
+    b.body.immovable = true;
+    return b;
+
   },
 
   resetScore: function () {
@@ -322,9 +331,8 @@ mainState.prototype = {
   },
 
   ballblockCollide: function (ball, block) {
-    var smash = game.rnd.pick(this.smashes)
-    smash.play();
-
+    game.rnd.pick(this.smashes).play();
+    block.specialfunc('got hit')
     block.kill();
     this.blockCount--
     this.updateScore(block.colour);
