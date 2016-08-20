@@ -35,7 +35,24 @@ var gameProperties = {
     fontWeight: 'bold',
     fill: '#FFFFFF',
     align: 'center'
+  }
+}
+
+var menuProperties = {
+  titleStyle: {
+    font: '50px Orbitron',
+    fontWeight: 'bold',
+    fill: '#FF0000',
+    align: 'center'
   },
+
+  menuItemHoverColour: "#FF0000",
+  menuItemStyle: {
+    font: '35px Orbitron',
+    fontWeight: 'bold',
+    fill: '#FFFFFF',
+    align: 'center'
+  }
 }
 
 var imageAssets = {

@@ -25,9 +25,6 @@ mainState.prototype = {
   // Game setup and loop
   // =======================
   preload: function () {
-    
-    game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
-
     game.load.image(imageAssets.paddleName, imageAssets.paddleURL);
     game.load.image(imageAssets.ballName, imageAssets.ballURL);
     
