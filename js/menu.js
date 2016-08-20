@@ -4,7 +4,7 @@ var Menu = function(game) {
   this.menuItemCount;
 
   this.playButton;
-  this.helpButton;
+  this.settingsButton;
 }
 
 Menu.prototype = {
@@ -24,7 +24,7 @@ Menu.prototype = {
     })
 
     this.settingsButton = this.addMenuItem('Settings', function () {
-      console.log('To be implemented');
+      console.log('Settings to be implemented');
     })
 
     this.creditsButton = this.addMenuItem('Credits', function () {

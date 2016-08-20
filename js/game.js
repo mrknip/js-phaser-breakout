@@ -1,3 +1,11 @@
+function debugOn () {
+ if (location.href.match(/debug/)) {return true};
+ return false;
+}
+if (debugOn()) {console.log('debug mode')}
+
+console.log(debugOn())
+
 var mainState = function(game) {
   this.paddleSprite;
 
@@ -39,15 +47,14 @@ mainState.prototype = {
   },
 
   create: function () {
-
-
     this.initGraphics();
     this.initControls();
     this.initPhysics();
     this.initAudio();
     this.initText();
+    this.initEvents();
 
-    this.startDemo();
+    this.startWaitScreen();
   },
 
   update: function () {
@@ -66,14 +73,13 @@ mainState.prototype = {
     game.physics.arcade.collide(this.ball, this.blockGroup, this.ballblockCollide, this.checkOrange, this);
 
     if (this.ball.top == 0 && this.ball.topped == false) {
-      this.updateModifiers('top');
+      this.hitTop.dispatch();
     }
   },
 
   // ==========================
   // Init functions
   // ==========================
-
   initGraphics: function () {
     this.paddleSprite = game.add.sprite(game.world.centerX, game.world.height - gameProperties.paddleHeight, imageAssets.paddleName);
     this.paddleSprite.anchor.set(0.5, 0.5);
@@ -118,6 +124,7 @@ mainState.prototype = {
 
     this.ball.body.bounce.set(1, 1);
     this.ball.body.collideWorldBounds = true;
+    this.ball.body.enable = false;
     this.ball.checkWorldBounds = true;
     this.ball.visible = false;
     this.ball.events.onOutOfBounds.add(this.ballOutOfBounds, this);
@@ -129,6 +136,17 @@ mainState.prototype = {
   initControls: function () {
     this.paddleLeftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     this.paddleRightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+  },
+
+  initEvents: function () {
+    this.hitOrange = new Phaser.Signal()
+    this.hitOrange.add(this.onHitOrange, this)
+
+    this.reachBounceLevel = new Phaser.Signal()
+    this.reachBounceLevel.add(this.onBounceLevel, this)
+
+    this.hitTop = new Phaser.Signal()
+    this.hitTop.add(this.onHitTop, this)
   },
 
   // =========================
@@ -152,31 +170,47 @@ mainState.prototype = {
   // Setup coordinator functions
   // ===========================
 
-  startDemo: function () {
+  startWaitScreen: function () {
     this.messageDisplay.visible = true;
     this.enablePit(false);
     this.enablePaddle(false);
+    
     this.game.input.onDown.add(this.startGame, this);
   },
 
   startGame: function () {
     this.game.input.onDown.remove(this.startGame, this);
     this.messageDisplay.visible = false;
+    
     this.enablePaddle(true);
     this.enablePit(true);
 
     this.addBlocks();
     
     this.resetScore();
-    this.reset();
+    this.resetBall();
+
+    this.startBallCountdown();
   },
 
   startNextRound: function () {
     this.addBlocks();
 
-    this.ball.visible = false;
-    this.ball.body.enable = false;
-    game.time.events.add(Phaser.Timer.SECOND, this.startBall, this);
+    this.enableBall(false);
+    this.resetBall();
+
+    game.time.events.add(Phaser.Timer.SECOND, this.startBallCountdown, this);
+  },
+
+  showGameOver: function () {
+    this.ball.kill();
+
+    this.messageDisplay.setText("Game over");
+    this.messageDisplay.visible = true;
+    
+    setTimeout(function(){
+      game.state.start('menu');
+    }, 3000);
   },
 
   // ==========================
@@ -186,7 +220,7 @@ mainState.prototype = {
   loadLevelFromSchema: function (schema, key) {
     for (var i = 0; i < schema.length; i++) {
       for (var j = 0; j < schema[0].length; j++) {
-        if (schema[i][j] === " ") {continue;}
+        if (schema[i][j] === " " || null ) {continue;}
         this.addBlock({
           x: gameProperties.gridPosX + (j * gameProperties.blockWidth),
           y: gameProperties.gridPosY + (i * gameProperties.blockHeight),
@@ -202,7 +236,8 @@ mainState.prototype = {
     }
     this.blockCount = 0;
 
-    this.loadLevelFromSchema(levels.default, levels.key);
+    debugOn() ? this.loadLevelFromSchema(levels.dev, levels.key) :
+                this.loadLevelFromSchema(levels.default, levels.key);
   },
 
   addBlock: function (options) {
@@ -222,24 +257,19 @@ mainState.prototype = {
     this.updateLives();
   },
 
-  reset: function () {
+  resetBall: function () {
     this.ball.oranged = false;
     this.ball.topped = false;
     this.ball.speed = gameProperties.ballSpeed;
     this.ball.bounces = 0;
-
     this.paddleSprite.scale.x = 1;
-
-    
-    this.startBallCountdown();
-    game.time.events.add(Phaser.Timer.SECOND * 3, this.startBall, this)
-
   },
 
   // =======================
   // Countdown between turns
   // =======================
   startBallCountdown: function () {
+    game.time.events.add(Phaser.Timer.SECOND * 3, this.startBall, this)
     this.ballCountdown.start();
     this.messageDisplay.visible = true;
     this.ballCountdown.add(Phaser.Timer.SECOND * 3, this.endBallCountdown, this);
@@ -252,12 +282,21 @@ mainState.prototype = {
 
   startBall: function () {  
     this.ball.reset(game.rnd.between(50, 350), 250);
-    this.ball.visible = true;
-    this.ball.body.enable = true;
+    this.enableBall(true);
 
     game.physics.arcade.velocityFromAngle(game.rnd.pick(gameProperties.ballAngles), 
                                           this.ball.speed,
                                           this.ball.body.velocity);
+  },
+
+  
+  // ==========================
+  // Switches
+  // ==========================
+
+  enableBall: function (bool) {
+    this.ball.visible = bool;
+    this.ball.body.enable = bool;
   },
 
   enablePit: function(bool) {
@@ -312,37 +351,25 @@ mainState.prototype = {
     if (this.lives == 0) {
       this.showGameOver();
     } else { 
-      this.reset();
+      this.resetBall()
+      this.startBallCountdown();
     }
-  },
-
-  showGameOver: function () {
-    this.ball.kill();
-    this.messageDisplay.setText("Game over");
-    this.messageDisplay.visible = true;
-    setTimeout(function(){
-      game.state.start('menu');
-    }, 3000);
   },
 
   ballblockCollide: function (ball, block) {
     game.rnd.pick(this.smashes).play();
 
     block.kill();
-    this.blockCount--
-
     this.updateScore(block.colour);
-    if (block.colour == 'orange') {
-      this.ball.body.bounce.set(1);
-    }
 
-    if (this.blockCount == 0) {
-      game.time.events.add(Phaser.Timer.SECOND * 0.5, this.startNextRound, this)    }
+    if (this.blockCount-- == 0) {
+      game.time.events.add(Phaser.Timer.SECOND * 0.5, this.startNextRound, this)
+    }
   },
 
   checkOrange: function (ball, block) {
     if (block.colour == 'orange' && !this.ball.oranged) {
-      this.updateModifiers('orange');
+      this.hitOrange.dispatch()
     }
   },
 
@@ -353,7 +380,7 @@ mainState.prototype = {
   updateBounces: function () {
     this.ball.bounces++
     if (this.ball.bounces == 4 || this.ball.bounces == 12) { 
-      this.updateModifiers('bounce');
+      this.reachBounceLevel.dispatch();
     }
   },
 
@@ -368,23 +395,27 @@ mainState.prototype = {
     this.livesDisplay.setText(this.lives);
   },
 
-  updateModifiers: function (modifier) {
-    switch (modifier) {
-      case 'bounce':
-        this.ball.speed += 100;
-        break;
-      case 'orange':
-        this.ball.oranged = true;
-        this.ball.body.bounce.set(1.25, 1.25); // Hacky to try and get in before the arcade physics engine calculates velocity - setting speed directly doesn't work.
-        break;
-      case 'top':
-        this.ball.topped = true;
-        this.ball.speed += 25;
-        this.paddleSprite.scale.x = 0.6;
-        break;
-    }
-  }
+  onHitOrange: function () { 
+    this.ball.oranged = true;
+    this.ball.speed += 100
 
+    game.physics.arcade.velocityFromAngle(Phaser.Math.radToDeg(this.ball.body.angle), 
+                                          this.ball.speed,
+                                          this.ball.body.velocity);
+  },
+
+  onBounceLevel: function () {
+    this.ball.speed += 100;
+    console.log('bounce ' + this.ball.bounces);
+    console.log(this.ball.speed)
+  },
+
+  onHitTop: function () {
+    this.ball.topped = true;
+    this.ball.speed += 25;
+    this.paddleSprite.scale.x = 0.6;
+    console.log(this.ball.speed)
+  }
 };
 
 // Runner

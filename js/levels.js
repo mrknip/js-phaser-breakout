@@ -30,6 +30,10 @@ var levels = {
     "yyy  yyy",
     "yyyyyyyy"
   ],
+
+  dev: [
+"oooooooo"
+  ],
   
   key: {
     y: 'yellow',
