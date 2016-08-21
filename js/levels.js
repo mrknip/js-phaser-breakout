@@ -1,44 +1,50 @@
-var levels = {
-  default: [
-    "rrrrrrrr",
-    "rrrrrrrr",
-    "oooooooo",
-    "oooooooo",
-    "gggggggg",
-    "gggggggg",
-    "yyyyyyyy",
-    "yyyyyyyy"
-  ],
+(function(exports){
 
-  diamond: [
-    "   rr   ",
-    "  roor  ",
-    " roggor ",
-    "rogyygor",
-    " roggor ",
-    "  roor  ",
-    "   rr   "
-  ],
+  var levels = {
+    default: [
+      "rrrrrrrr",
+      "rrrrrrrr",
+      "oooooooo",
+      "oooooooo",
+      "gggggggg",
+      "gggggggg",
+      "yyyyyyyy",
+      "yyyyyyyy"
+    ],
 
-  smiley: [
-    "rrrrrrrr",
-    "r  rr  r",
-    "o  oo  o",
-    "oooooooo",
-    "g gggg g",
-    "gg gg gg",
-    "yyy  yyy",
-    "yyyyyyyy"
-  ],
+    diamond: [
+      "   rr   ",
+      "  roor  ",
+      " roggor ",
+      "rogyygor",
+      " roggor ",
+      "  roor  ",
+      "   rr   "
+    ],
 
-  dev: [
-"oooooooo"
-  ],
-  
-  key: {
-    y: 'yellow',
-    r: 'red',
-    o: 'orange',
-    g: 'green'
+    smiley: [
+      "rrrrrrrr",
+      "r  rr  r",
+      "o  oo  o",
+      "oooooooo",
+      "g gggg g",
+      "gg gg gg",
+      "yyy  yyy",
+      "yyyyyyyy"
+    ],
+
+    dev: [
+  "oooooooo"
+    ],
+    
+    key: {
+      y: 'yellow',
+      r: 'red',
+      o: 'orange',
+      g: 'green'
+    }
   }
-}
+
+  exports.levels = levels;
+
+})(this.Config || (this.Config = {}));

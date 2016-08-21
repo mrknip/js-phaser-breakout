@@ -4,8 +4,6 @@ function debugOn () {
 }
 if (debugOn()) {console.log('debug mode')}
 
-console.log(debugOn())
-
 var mainState = function(game) {
   this.paddleSprite;
 
@@ -15,6 +13,8 @@ var mainState = function(game) {
   this.paddleHitSound;
 
   this.blockGroup;
+
+  this.spaceBG;
 
   this.score;
   this.lives;
@@ -33,16 +33,16 @@ mainState.prototype = {
   // Game setup and loop
   // =======================
   preload: function () {
-    game.load.image(imageAssets.paddleName, imageAssets.paddleURL);
-    game.load.image(imageAssets.ballName, imageAssets.ballURL);
+    game.load.image(Config.Assets.images.paddleName, Config.Assets.images.paddleURL);
+    game.load.image(Config.Assets.images.ballName, Config.Assets.images.ballURL);
     
-    game.load.audio(audioAssets.paddleHitName, audioAssets.paddleHitURL);
-    game.load.audio(audioAssets.smashOneName, audioAssets.smashOneURL);
-    game.load.audio(audioAssets.smashTwoName, audioAssets.smashTwoURL);
-    game.load.audio(audioAssets.smashThreeName, audioAssets.smashThreeURL);
+    game.load.audio(Config.Assets.sounds.paddleHitName, Config.Assets.sounds.paddleHitURL);
+    game.load.audio(Config.Assets.sounds.smashOneName, Config.Assets.sounds.smashOneURL);
+    game.load.audio(Config.Assets.sounds.smashTwoName, Config.Assets.sounds.smashTwoURL);
+    game.load.audio(Config.Assets.sounds.smashThreeName, Config.Assets.sounds.smashThreeURL);
 
-    gameProperties.blockRows.forEach(function(colour){
-      game.load.image(imageAssets.blockName[colour], imageAssets.blockURL[colour])
+    Config.Game.blockRows.forEach(function(colour){
+      game.load.image(Config.Assets.images.blockName[colour], Config.Assets.images.blockURL[colour])
     });
   },
 
@@ -62,10 +62,11 @@ mainState.prototype = {
 
     this.checkCollisions();
 
-
     if (this.ballCountdown.running) {
       this.messageDisplay.setText(Math.ceil(3 - this.ballCountdown.seconds));
     }
+
+    this.background.tilePosition.y += 2;
   },
 
   checkCollisions: function () {
@@ -81,33 +82,37 @@ mainState.prototype = {
   // Init functions
   // ==========================
   initGraphics: function () {
-    this.paddleSprite = game.add.sprite(game.world.centerX, game.world.height - gameProperties.paddleHeight, imageAssets.paddleName);
+    this.background = game.add.tileSprite(0, 0, 400, 500, 'background')
+    
+    this.paddleSprite = game.add.sprite(game.world.centerX, game.world.height - Config.Game.paddleHeight, Config.Assets.images.paddleName);
     this.paddleSprite.anchor.set(0.5, 0.5);
 
-    this.ball = game.add.sprite(game.world.centerX, 400, imageAssets.ballName);
+    this.ball = game.add.sprite(game.world.centerX, 400, Config.Assets.images.ballName);
     this.ball.anchor.set(0.5, 0.5);
 
     this.blockGroup = game.add.group();
+
+
   },
 
   initText: function () {
-    this.scoreDisplay = game.add.text(gameProperties.scoreDisplayX, gameProperties.scoreDisplayY, "0", gameProperties.numberDisplayStyle);
+    this.scoreDisplay = game.add.text(Config.Game.scoreDisplayX, Config.Game.scoreDisplayY, "0", Config.Styles.numberDisplay);
     this.scoreDisplay.anchor.set(0, 0.5);
 
-    this.livesDisplay = game.add.text(gameProperties.livesDisplayX, gameProperties.livesDisplayY, gameProperties.lives, gameProperties.numberDisplayStyle);
+    this.livesDisplay = game.add.text(Config.Game.livesDisplayX, Config.Game.livesDisplayY, Config.Game.lives, Config.Styles.numberDisplay);
     this.livesDisplay.anchor.set(1, 0.5);
 
-    this.messageDisplay = game.add.text(game.world.centerX, game.world.centerY, "Click to start", gameProperties.numberDisplayStyle);
+    this.messageDisplay = game.add.text(game.world.centerX, game.world.centerY, "Click to start", Config.Styles.numberDisplay);
     this.messageDisplay.anchor.set(0.5, 0);
 
     this.ballCountdown = game.time.create(false);
   },
 
   initAudio: function () {
-    this.paddleHitSound = game.add.audio(audioAssets.paddleHitName);
-    this.smashOne = game.add.audio(audioAssets.smashOneName);
-    this.smashTwo = game.add.audio(audioAssets.smashTwoName);
-    this.smashThree = game.add.audio(audioAssets.smashThreeName);
+    this.paddleHitSound = game.add.audio(Config.Assets.sounds.paddleHitName);
+    this.smashOne = game.add.audio(Config.Assets.sounds.smashOneName);
+    this.smashTwo = game.add.audio(Config.Assets.sounds.smashTwoName);
+    this.smashThree = game.add.audio(Config.Assets.sounds.smashThreeName);
 
     this.smashes = [this.smashOne, this.smashTwo, this.smashThree];
   },
@@ -156,11 +161,11 @@ mainState.prototype = {
   movePaddle: function () {
     if (this.paddleLeftKey.isDown) 
     {
-      this.paddleSprite.body.velocity.x = -gameProperties.paddleSpeed;
+      this.paddleSprite.body.velocity.x = -Config.Game.paddleSpeed;
     } 
     else if (this.paddleRightKey.isDown) 
     {
-      this.paddleSprite.body.velocity.x = gameProperties.paddleSpeed;
+      this.paddleSprite.body.velocity.x = Config.Game.paddleSpeed;
     } else {
       this.paddleSprite.body.velocity.x = 0;
     }
@@ -222,8 +227,8 @@ mainState.prototype = {
       for (var j = 0; j < schema[0].length; j++) {
         if (schema[i][j] === " " || null ) {continue;}
         this.addBlock({
-          x: gameProperties.gridPosX + (j * gameProperties.blockWidth),
-          y: gameProperties.gridPosY + (i * gameProperties.blockHeight),
+          x: Config.Game.gridPosX + (j * Config.Game.blockWidth),
+          y: Config.Game.gridPosY + (i * Config.Game.blockHeight),
           colour: key[schema[i][j]]
         })
       }
@@ -236,12 +241,12 @@ mainState.prototype = {
     }
     this.blockCount = 0;
 
-    debugOn() ? this.loadLevelFromSchema(levels.dev, levels.key) :
-                this.loadLevelFromSchema(levels.default, levels.key);
+    debugOn() ? this.loadLevelFromSchema(Config.levels.dev, Config.levels.key) :
+                this.loadLevelFromSchema(Config.levels.default, Config.levels.key);
   },
 
   addBlock: function (options) {
-    var b = game.add.sprite(options.x, options.y, imageAssets.blockName[options.colour]);
+    var b = game.add.sprite(options.x, options.y, Config.Assets.images.blockName[options.colour]);
     b.colour = options.colour;
 
     this.blockCount++;
@@ -252,7 +257,7 @@ mainState.prototype = {
 
   resetScore: function () {
     this.score = 0;
-    this.lives = gameProperties.lives;
+    this.lives = Config.Game.lives;
     this.updateScore();
     this.updateLives();
   },
@@ -260,7 +265,7 @@ mainState.prototype = {
   resetBall: function () {
     this.ball.oranged = false;
     this.ball.topped = false;
-    this.ball.speed = gameProperties.ballSpeed;
+    this.ball.speed = Config.Game.ballSpeed;
     this.ball.bounces = 0;
     this.paddleSprite.scale.x = 1;
   },
@@ -284,7 +289,7 @@ mainState.prototype = {
     this.ball.reset(game.rnd.between(50, 350), 250);
     this.enableBall(true);
 
-    game.physics.arcade.velocityFromAngle(game.rnd.pick(gameProperties.ballAngles), 
+    game.physics.arcade.velocityFromAngle(game.rnd.pick(Config.Game.ballAngles), 
                                           this.ball.speed,
                                           this.ball.body.velocity);
   },
@@ -316,7 +321,7 @@ mainState.prototype = {
     this.updateBounces();
     this.paddleHitSound.play();
     
-    var contactSegment = Math.floor((ball.x - paddle.x)/gameProperties.paddleSegWidth)
+    var contactSegment = Math.floor((ball.x - paddle.x)/Config.Game.paddleSegWidth)
     game.physics.arcade.velocityFromAngle(this.calcReturnAngle(contactSegment), 
                                           this.ball.speed,
                                           this.ball.body.velocity);
@@ -325,15 +330,15 @@ mainState.prototype = {
   calcReturnAngle: function (contactSegment) {
     var returnAngle;
 
-    if (contactSegment > (gameProperties.paddleSegments/2)) {
-      contactSegment = (gameProperties.paddleSegments/2)
-    } else if (contactSegment < -(gameProperties.paddleSegments/2)) {
-      contactSegment = -(gameProperties.paddleSegments/2)
+    if (contactSegment > (Config.Game.paddleSegments/2)) {
+      contactSegment = (Config.Game.paddleSegments/2)
+    } else if (contactSegment < -(Config.Game.paddleSegments/2)) {
+      contactSegment = -(Config.Game.paddleSegments/2)
     } else if (contactSegment == 0) {
       contactSegment = 1;
     }
 
-    returnAngle = (Math.abs(contactSegment) * gameProperties.paddleAngleMultiplier);
+    returnAngle = (Math.abs(contactSegment) * Config.Game.paddleAngleMultiplier);
     
     if (contactSegment < 0) {
       returnAngle -= 110;
@@ -386,7 +391,7 @@ mainState.prototype = {
 
   updateScore: function (colour = null) {
     if (colour) {
-      this.score += gameProperties.scores[colour];
+      this.score += Config.Game.scores[colour];
     }
     this.scoreDisplay.setText(this.score);
   },
@@ -418,11 +423,8 @@ mainState.prototype = {
   }
 };
 
-// Runner
-// Includes Webfont loader to give it the jump on the game loader
+var game = new Phaser.Game(Config.Game.gameWidth, Config.Game.gameHeight, Phaser.AUTO, 'gameDiv')
 
-var game = new Phaser.Game(gameProperties.gameWidth, gameProperties.gameHeight, Phaser.AUTO, 'gameDiv')
-    
 WebFont.load({
   active: function () { 
     game.state.add('main', mainState)
